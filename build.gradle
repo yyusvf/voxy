@@ -262,6 +262,20 @@ task validateMixinConfig(type: Exec) {
     }
 }
 
+// Report upstream code paths that a port stubbed out with a constant condition
+task validatePortStubs(type: Exec) {
+    description = 'Lists newly introduced constant-disabled branches (if (false) / && !false)'
+    group = 'verification'
+
+    commandLine 'python3', 'scripts/validate_port_stubs.py'
+
+    environment 'PYTHONIOENCODING', 'utf-8'
+
+    onlyIf {
+        file('scripts/validate_port_stubs.py').exists()
+    }
+}
+
 // Validate mixin target signatures before compilation
 task validateMixinSignatures(type: Exec) {
     description = 'Validates @Inject/@Shadow targets against Minecraft source'
@@ -301,6 +315,7 @@ task validateMixins(type: Exec) {
 // Run validations as part of build process
 compileJava.dependsOn validateMixinConfig       // Before compilation (config check)
 compileJava.dependsOn validateMixinSignatures   // Before compilation (signature check)
+compileJava.dependsOn validatePortStubs         // Before compilation (disabled-branch inventory)
 build.dependsOn validateMixins                   // After JAR creation (content check)
 
 

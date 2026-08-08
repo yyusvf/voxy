@@ -1,0 +1,22 @@
+# Constant-disabled branches present when this check was introduced (all upstream).
+# Key: <path>::<code>. Regenerate only when you have reviewed the diff.
+src/main/java/me/cortex/voxy/client/core/IrisVoxyRenderPipeline.java::if (false) {//TODO: only do this if shader specifies
+src/main/java/me/cortex/voxy/client/core/IrisVoxyRenderPipeline.java::if (false) {//TODO: only do this if shader specifies
+src/main/java/me/cortex/voxy/client/core/IrisVoxyRenderPipeline.java::if (true) {//TODO: make shader specified
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/NodeCleaner.java::if (false) {
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/NodeManager.java::if (false) {//Check all children are leaf nodes
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/TestNodeManager.java::if (false) {
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/TestNodeManager.java::if (false) {
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/TestNodeManager.java::if (false) {
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/TestNodeManager.java::if (false) {// Test case A, known crash
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/TestNodeManager.java::if (false) {//Crash D
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/TestNodeManager.java::if (false) {//Crash E
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/TestNodeManager.java::if (false) {//Crash b
+src/main/java/me/cortex/voxy/client/core/rendering/hierachical/TestNodeManager.java::if (false) {//Crash c
+src/main/java/me/cortex/voxy/common/config/storage/rocksdb/RocksDBStorageBackend.java::if (true) {
+src/main/java/me/cortex/voxy/common/world/ActiveSectionTracker.java::if (true) {
+src/main/java/me/cortex/voxy/common/world/ActiveSectionTracker.java::if (true) {
+src/main/java/me/cortex/voxy/common/world/ActiveSectionTracker.java::if (true) {
+src/main/java/me/cortex/voxy/common/world/LoadedPositionTracker.java::if (false) {
+src/main/java/me/cortex/voxy/common/world/LoadedPositionTracker.java::if (true) {
+src/main/java/me/cortex/voxy/commonImpl/mixin/chunky/MixinFabricWorld.java::if (false) {//TODO: ADD SERVER CONFIG THING
