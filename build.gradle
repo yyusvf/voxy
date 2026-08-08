@@ -8,8 +8,13 @@ def isInGHA = System.getenv("GITHUB_ACTIONS") == "true"
 version = project.mod_version
 group = project.maven_group
 
+// Experimental shader build: ./gradlew build -Pshaders
+// Produces a SEPARATE artifact (voxy-shaders-*.jar) so the known-good jar is never overwritten.
+// Only one of the two may be in the mods folder at a time - both use modId "voxy".
+def withShaders = project.hasProperty('shaders')
+
 base {
-    archivesName = project.archives_base_name
+    archivesName = withShaders ? "${project.archives_base_name}-shaders" : project.archives_base_name
 }
 
 // Exclude optional integrations from compilation - not all available for NeoForge 1.21.1
@@ -17,13 +22,12 @@ base {
 sourceSets {
     main {
         java {
-            // Iris shader integration
-            exclude 'me/cortex/voxy/client/iris/**'
-            exclude 'me/cortex/voxy/client/core/IrisVoxyRenderPipeline.java'
-            exclude 'me/cortex/voxy/client/core/util/IrisUtil.java'
-            exclude 'me/cortex/voxy/client/mixin/iris/**'
+            // Iris shader integration is always compiled, but its mixins are only registered in
+            // the -Pshaders build. Without those mixins IrisRenderingPipeline never implements
+            // IGetIrisVoxyPipelineData, so RenderPipelineFactory falls back to the normal pipeline.
 
-            // Sodium config API (changed in Sodium 0.6.x)
+            // Sodium 0.6 config API (net.caffeinemc.mods.sodium.api.config) - Embeddium does not
+            // ship it; the options page is built with Embeddium's API in VoxyEmbeddiumOptions instead
             exclude 'me/cortex/voxy/client/config/SodiumConfigBuilder.java'
             exclude 'me/cortex/voxy/client/config/VoxyConfigMenu.java'
             exclude 'me/cortex/voxy/client/config/IConfigPageSetter.java'
@@ -44,8 +48,13 @@ sourceSets {
             exclude 'me/cortex/voxy/client/VoxyDebugScreenEntry.java'
             exclude 'me/cortex/voxy/client/mixin/minecraft/MixinDebugScreenEntryList.java'
 
-            // Sodium config integration mixin
+            // Sodium config integration mixin - targets Sodium's VideoSettingsScreen, which has no
+            // Embeddium counterpart with the same structure. Not registered in client.voxy.mixins.json.
             exclude 'me/cortex/voxy/client/mixin/sodium/MixinVideoSettingsScreen.java'
+
+            // Chunk fade-in cancel - Embeddium's RenderRegionManager has no uploadResults() and no
+            // fade-in timer, so this mixin has no target. Not registered in client.voxy.mixins.json.
+            exclude 'me/cortex/voxy/client/mixin/sodium/MixinRenderRegionManager.java'
 
             // Blaze3D OpenGL debug mixin (GlDebug class not accessible in MC 1.21.1)
             exclude 'me/cortex/voxy/client/mixin/minecraft/MixinGlDebug.java'
@@ -137,9 +146,17 @@ processResources {
     def hash = gitCommitHash()
     def version = project.version
 
-    inputs.properties("version": version, "commit": hash, "buildtime": time)
+    // The iris mixin config is only registered in the -Pshaders build; outside it the iris mixin
+    // classes must never be referenced by a config, or FML reports phantom mixins.
+    def irisMixins = withShaders ? '\n[[mixins]]\nconfig="client.voxy.iris.mixins.json"' : ''
+
+    inputs.properties("version": version, "commit": hash, "buildtime": time, "irisMixins": irisMixins)
     filesMatching("META-INF/neoforge.mods.toml") {
-        expand "version": version, "commit": hash, "buildtime": time
+        expand "version": version, "commit": hash, "buildtime": time, "irisMixins": irisMixins
+    }
+
+    if (!withShaders) {
+        exclude 'client.voxy.iris.mixins.json'
     }
 
     // Exclude leftover Fabric metadata from NeoForge build
@@ -180,18 +197,16 @@ dependencies {
     // Forgified Fabric API for compatibility (includes Fabric Loader API)
     implementation "org.sinytra.forgified-fabric-api:forgified-fabric-api:${project.forgified_fabric_version}"
 
-    // Sodium for NeoForge (0.6.13 - latest for MC 1.21.1)
-    implementation "maven.modrinth:sodium:mc1.21.1-0.6.13-neoforge"
+    // Embeddium for NeoForge (Sodium 0.6 fork, packages relocated to org.embeddedt.embeddium.impl)
+    // Voxy targets Embeddium instead of Sodium so it can run in packs that mandate Embeddium.
+    implementation "maven.modrinth:embeddium:${project.embeddium_version}"
 
     // Lithium for NeoForge (0.15.1 - latest for MC 1.21.1)
     implementation("maven.modrinth:lithium:mc1.21.1-0.15.1-neoforge")
 
-    // SodiumOptionsAPI for Video Settings integration
-    // Provides event API to add custom pages to Sodium's options GUI
-    compileOnly("maven.modrinth:sodium-options-api:neoforge-1.21.1-1.0.10")
-
-    // Reese's Sodium Options - required by SodiumOptionsAPI
-    compileOnly("maven.modrinth:reeses-sodium-options:mc1.21.3-1.8.0+neoforge")
+    // Iris. compileOnly: it stays a soft dependency and the iris mixins are disabled at runtime
+    // (and unregistered outside the -Pshaders build) when Iris is absent.
+    compileOnly "maven.modrinth:iris:${project.iris_version}"
 
     // Optional mod dependencies - commented out for initial port
     // TODO: Add NeoForge versions when available
@@ -238,6 +253,9 @@ task validateMixinConfig(type: Exec) {
 
     commandLine 'python3', 'scripts/validate_mixin_config.py'
 
+    // Windows consoles default to cp1252, which cannot encode the script's ✓/✗ output
+    environment 'PYTHONIOENCODING', 'utf-8'
+
     // Only run if script exists
     onlyIf {
         file('scripts/validate_mixin_config.py').exists()
@@ -250,6 +268,8 @@ task validateMixinSignatures(type: Exec) {
     group = 'verification'
 
     commandLine 'python3', 'scripts/validate_mixin_targets.py'
+
+    environment 'PYTHONIOENCODING', 'utf-8'
 
     // Only run if script and MC sources exist
     onlyIf {
@@ -270,9 +290,11 @@ task validateMixins(type: Exec) {
 
     commandLine 'bash', 'scripts/validate_mixins.sh'
 
-    // Only run if script exists
+    // Only run if script exists and jq (which the script relies on) is available
     onlyIf {
-        file('scripts/validate_mixins.sh').exists()
+        file('scripts/validate_mixins.sh').exists() && System.getenv("PATH")
+                .split(File.pathSeparator)
+                .any { new File(it, "jq").exists() || new File(it, "jq.exe").exists() }
     }
 }
 

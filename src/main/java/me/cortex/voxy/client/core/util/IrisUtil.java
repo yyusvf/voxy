@@ -2,9 +2,8 @@ package me.cortex.voxy.client.core.util;
 
 import me.cortex.voxy.client.core.VoxyRenderSystem;
 import me.cortex.voxy.client.core.rendering.Viewport;
-import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
-import net.caffeinemc.mods.sodium.client.util.FogParameters;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.ModList;
+import org.embeddedt.embeddium.impl.render.chunk.ChunkRenderMatrices;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gl.IrisRenderSystem;
@@ -14,15 +13,18 @@ import java.io.IOException;
 
 public class IrisUtil {
 
-    public record CapturedViewportParameters(ChunkRenderMatrices matrices, FogParameters parameters, double x, double y, double z) {
+    // MC 1.21.1 / Embeddium: Sodium 0.8's FogParameters has no counterpart here. Voxy only fed it
+    // into the final blit's fog uniforms, which the pipelines now source from RenderSystem instead,
+    // so the captured parameters carry matrices and camera position only.
+    public record CapturedViewportParameters(ChunkRenderMatrices matrices, double x, double y, double z) {
         public Viewport<?> apply(VoxyRenderSystem vrs) {
-            return vrs.setupViewport(this.matrices, this.parameters, this.x, this.y, this.z);
+            return vrs.setupViewport(this.matrices, this.x, this.y, this.z);
         }
     }
 
     public static CapturedViewportParameters CAPTURED_VIEWPORT_PARAMETERS;
 
-    public static final boolean IRIS_INSTALLED = FabricLoader.getInstance().isModLoaded("iris");
+    public static final boolean IRIS_INSTALLED = ModList.get() != null && ModList.get().isLoaded("iris");
     public static final boolean SHADER_SUPPORT = true;//System.getProperty("voxy.enableExperimentalIrisPipeline", "false").equalsIgnoreCase("true");
 
 

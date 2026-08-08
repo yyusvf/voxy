@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "package": "me.cortex.voxy.client.mixin.iris",
+  "plugin": "me.cortex.voxy.client.iris.IrisMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "CustomUniformsAccessor",
+    "IrisRenderingPipelineAccessor",
+    "MixinIris",
+    "MixinIrisRenderingPipeline",
+    "MixinIrisSamplers",
+    "MixinLevelRenderer",
+    "MixinMatrixUniforms",
+    "MixinPackRenderTargetDirectives",
+    "MixinProgramSet",
+    "MixinShaderPackSourceNames",
+    "MixinStandardMacros"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -43,7 +43,7 @@ Before modifying any file:
 **Current validated versions** (for NeoForge 1.21.1):
 - NeoForge: 21.1.217
 - Minecraft: 1.21.1
-- Sodium: mc1.21.1-0.6.13-neoforge
+- Embeddium: 1.0.15+mc1.21.1 (**replaces Sodium** - see "Embeddium instead of Sodium" below)
 - Lithium: mc1.21.1-0.15.1-neoforge
 - Forgified Fabric API: Check Modrinth/CurseForge for correct 1.21.1 version
 
@@ -83,6 +83,36 @@ Before modifying any file:
 3. **Validate Access Transformers** against actual class structures
 4. **Test build** after every significant change
 5. **Document fixes** with evidence from reference sources
+
+## Embeddium instead of Sodium
+
+This port targets **Embeddium** (`org.embeddedt.embeddium.*`), not Sodium
+(`net.caffeinemc.mods.sodium.*`), so it can run in packs where Embeddium is mandatory.
+Embeddium 1.0.x is a fork of Sodium 0.6 with relocated packages; it does **not** ship any
+`net.caffeinemc.mods.sodium.*` classes, so mods compiled against Sodium fail silently there.
+
+Package mapping:
+
+| Sodium 0.6.13 | Embeddium 1.0.15 |
+|---|---|
+| `net.caffeinemc.mods.sodium.client.*` | `org.embeddedt.embeddium.impl.*` |
+| `...client.render.SodiumWorldRenderer` | `...impl.render.EmbeddiumWorldRenderer` |
+| `...client.util.color.ColorSRGB` | `...impl.util.color.ColorSRGB` |
+| `...client.gui.options.*` (0.5-era API) | `org.embeddedt.embeddium.api.options.*` |
+| `...api.config.*` (0.6 config API) | no equivalent - use `OptionGUIConstructionEvent` |
+
+Behavioural differences that required code changes (verified with `javap` against the
+Embeddium jar - always re-verify when bumping the Embeddium version):
+
+- `RenderSectionManager`'s `ClientLevel` field is named `world`, not `level`
+- `RenderSection.setInfo(BuiltSectionInfo)` returns `void`, not `boolean`
+- `RenderRegionManager` has no `uploadResults()` and no chunk fade-in timer
+  (`MixinRenderRegionManager` is therefore excluded from compilation)
+- Embeddium requires an explicit `OptionIdentifier` on every option and option group
+
+Verification workflow used for this port: extract the Embeddium jar and run
+`javap -p` / `javap -c` on each mixin target to confirm class names, field names, method
+signatures and injection points before editing.
 
 ## Known Issues (NeoForge Port)
 

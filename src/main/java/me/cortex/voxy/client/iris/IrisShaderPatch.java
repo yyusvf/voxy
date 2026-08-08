@@ -302,9 +302,11 @@ public class IrisShaderPatch {
         };
     }
 
+    // MC 1.21.1 ships a Gson without the Strictness enum (added in Gson 2.11); setLenient(true)
+    // is the equivalent on this version.
     private static final Gson GSON = new GsonBuilder()
             .excludeFieldsWithModifiers(Modifier.PRIVATE)
-            .setStrictness(Strictness.LENIENT)
+            .setLenient()
             .create();
 
     public static IrisShaderPatch makePatch(ShaderPack ipack, AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider) {

@@ -1,13 +1,15 @@
 package me.cortex.voxy.client.mixin.sodium;
 
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
-import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
-import net.caffeinemc.mods.sodium.client.render.chunk.map.ChunkTracker;
+import org.embeddedt.embeddium.impl.render.EmbeddiumWorldRenderer;
+import org.embeddedt.embeddium.impl.render.chunk.RenderSectionManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(value = SodiumWorldRenderer.class, remap = false)
+/**
+ * Embeddium port: Sodium's SodiumWorldRenderer is EmbeddiumWorldRenderer here.
+ * The {@code renderSectionManager} field is unchanged.
+ */
+@Mixin(value = EmbeddiumWorldRenderer.class, remap = false)
 public interface AccessorSodiumWorldRenderer {
     @Accessor
     RenderSectionManager getRenderSectionManager();

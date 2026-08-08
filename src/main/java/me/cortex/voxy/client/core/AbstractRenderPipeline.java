@@ -265,4 +265,13 @@ public abstract class AbstractRenderPipeline extends TrackedObject {
     //Null means no scaling factor
     public float[] getRenderScalingFactor() {return null;}
 
+    /**
+     * True when this pipeline sets the viewport up itself, earlier in the frame.
+     *
+     * The terrain renderer hook must then reuse that viewport instead of building a second one:
+     * calling setupViewport twice per frame overwrites the matrices captured for the shader
+     * pipeline and double-increments Viewport.frameId, which makes occlusion tracking flicker.
+     */
+    public boolean setsUpViewportItself() {return false;}
+
 }

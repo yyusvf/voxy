@@ -261,4 +261,11 @@ public class IrisVoxyRenderPipeline extends AbstractRenderPipeline {
     public float[] getRenderScalingFactor() {
         return this.data.resolutionScale;
     }
+
+    // The viewport is set up from MixinIrisRenderingPipeline.beginLevelRendering, using the
+    // matrices captured in MixinLevelRenderer before Iris takes over.
+    @Override
+    public boolean setsUpViewportItself() {
+        return true;
+    }
 }

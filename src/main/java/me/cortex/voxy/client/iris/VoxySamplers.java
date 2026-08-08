@@ -5,6 +5,10 @@ import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 
+/**
+ * Iris 1.8.12 note: addDynamicSampler takes the GlSampler directly, not a Supplier as in Iris
+ * 1.10.x, and MIPPED_NEAREST_NEAREST is spelled MIPPED_NEAREST here.
+ */
 public class VoxySamplers {
     public static void addSamplers(IrisRenderingPipeline pipeline, SamplerHolder samplers) {
         var patchData = ((IGetVoxyPatchData)pipeline).voxy$getPatchData();
@@ -33,7 +37,7 @@ public class VoxySamplers {
                     return 0;
                 }
                 return dt.id;
-            }, ()->GlSampler.MIPPED_NEAREST_NEAREST, opaqueNames);
+            }, GlSampler.MIPPED_NEAREST, opaqueNames);
 
             samplers.addDynamicSampler(TextureType.TEXTURE_2D, () -> {
                 var pipeData = ((IGetIrisVoxyPipelineData)pipeline).voxy$getPipelineData();
@@ -49,7 +53,7 @@ public class VoxySamplers {
                     return 0;
                 }
                 return dt.id;
-            }, ()->GlSampler.MIPPED_NEAREST_NEAREST, translucentNames);
+            }, GlSampler.MIPPED_NEAREST, translucentNames);
         }
     }
 }

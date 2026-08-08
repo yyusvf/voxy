@@ -97,6 +97,9 @@ public class VoxyNeoForgeConfig {
      * Sync NeoForge config values to VoxyConfig.
      */
     private static void syncToVoxyConfig() {
+        boolean rendererWasEnabled = VoxyConfig.CONFIG.enabled;
+        boolean renderingWasEnabled = VoxyConfig.CONFIG.enableRendering;
+
         VoxyConfig.CONFIG.enabled = ENABLED.get();
         VoxyConfig.CONFIG.enableRendering = ENABLE_RENDERING.get();
         VoxyConfig.CONFIG.ingestEnabled = INGEST_ENABLED.get();
@@ -113,6 +116,47 @@ public class VoxyNeoForgeConfig {
 
         // Also save to the JSON config for compatibility
         VoxyConfig.CONFIG.save();
+
+        // enabled/enableRendering are only evaluated when the render system is built, so a change
+        // made through the Mods config screen needs an explicit renderer reload to take effect.
+        if (rendererWasEnabled != VoxyConfig.CONFIG.enabled
+                || renderingWasEnabled != VoxyConfig.CONFIG.enableRendering) {
+            reloadLevelRenderer();
+        }
+    }
+
+    /** Rebuilds the level renderer on the render thread, if the game is far enough along. */
+    private static void reloadLevelRenderer() {
+        var mc = net.minecraft.client.Minecraft.getInstance();
+        if (mc == null || mc.levelRenderer == null) {
+            return;//Config loaded before the game window exists; nothing to reload yet
+        }
+        mc.execute(() -> {
+            if (mc.level != null) {
+                mc.levelRenderer.allChanged();
+            }
+        });
+    }
+
+    /**
+     * Push VoxyConfig back into the NeoForge spec.
+     *
+     * The NeoForge config is the source of truth - syncToVoxyConfig() overwrites VoxyConfig on
+     * every load/reload. Anything that edits VoxyConfig directly (the Embeddium options page)
+     * must call this, or the change is silently reverted the next time the config is (re)loaded.
+     */
+    public static void syncFromVoxyConfig() {
+        ENABLED.set(VoxyConfig.CONFIG.enabled);
+        ENABLE_RENDERING.set(VoxyConfig.CONFIG.enableRendering);
+        INGEST_ENABLED.set(VoxyConfig.CONFIG.ingestEnabled);
+        SECTION_RENDER_DISTANCE.set(VoxyConfig.CONFIG.sectionRenderDistance);
+        SERVICE_THREADS.set(VoxyConfig.CONFIG.serviceThreads);
+        SUB_DIVISION_SIZE.set((double) VoxyConfig.CONFIG.subDivisionSize);
+        USE_ENVIRONMENTAL_FOG.set(VoxyConfig.CONFIG.useEnvironmentalFog);
+        DONT_USE_SODIUM_BUILDER_THREADS.set(VoxyConfig.CONFIG.dontUseSodiumBuilderThreads);
+        LOD_BOUNDARY_BUFFER.set(VoxyConfig.CONFIG.lodBoundaryBuffer);
+        EARTH_CURVE_RATIO.set(VoxyConfig.CONFIG.earthCurveRatio);
+        RENDER_STATISTICS.set(RenderStatistics.enabled);
     }
 
     @SubscribeEvent

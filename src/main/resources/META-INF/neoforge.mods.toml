@@ -9,7 +9,10 @@ version="${version}"
 displayName="Voxy"
 description="Far distance rendering mod utilising LoDs"
 authors="Cortex"
-logoFile="assets/voxy/icon.png"
+# Must be a single path segment at the JAR root: both NeoForge's mod list screen and
+# Embeddium's video settings tab pass this straight to PackResources.getRootResource(),
+# which rejects any value containing '/' (FileUtil.validatePath -> IllegalArgumentException).
+logoFile="icon.png"
 
 [[dependencies.voxy]]
 modId="neoforge"
@@ -26,10 +29,19 @@ ordering="NONE"
 side="BOTH"
 
 [[dependencies.voxy]]
-modId="sodium"
+modId="embeddium"
 type="required"
-versionRange="[0.6.13,)"
+versionRange="[1.0.0,)"
 ordering="AFTER"
+side="CLIENT"
+
+# Sodium and Embeddium are mutually exclusive; this build integrates with Embeddium only.
+[[dependencies.voxy]]
+modId="sodium"
+type="incompatible"
+reason="This build of Voxy targets Embeddium. Use the Sodium build of Voxy instead."
+versionRange="[0,)"
+ordering="NONE"
 side="CLIENT"
 
 [[dependencies.voxy]]
@@ -44,3 +56,4 @@ config="client.voxy.mixins.json"
 
 [[mixins]]
 config="common.voxy.mixins.json"
+${irisMixins}

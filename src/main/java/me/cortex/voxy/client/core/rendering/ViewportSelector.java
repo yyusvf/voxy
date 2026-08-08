@@ -1,10 +1,10 @@
 package me.cortex.voxy.client.core.rendering;
 
-// MC 1.21.1 NeoForge: Iris/Vivecraft integrations excluded - not available on NeoForge
-// import me.cortex.voxy.client.core.util.IrisUtil;
+// MC 1.21.1 NeoForge: Vivecraft integration excluded - not available on NeoForge
 // import net.fabricmc.loader.api.FabricLoader;
 // import org.vivecraft.api.client.VRRenderingAPI;
 // import static org.vivecraft.api.client.data.RenderPass.VANILLA;
+import me.cortex.voxy.client.core.util.IrisUtil;
 import net.neoforged.fml.ModList;
 
 import java.util.HashMap;
@@ -39,9 +39,14 @@ public class ViewportSelector <T extends Viewport<?>> {
 
     private static final Object IRIS_SHADOW_OBJECT = new Object();
     public T getViewport() {
-        // MC 1.21.1 NeoForge: Simplified viewport selection
-        // Vivecraft and Iris integrations disabled - return default viewport
-        // TODO: Re-enable Iris shadow viewport when Oculus (NeoForge Iris port) support added
+        // Iris' shadow pass renders from the sun's camera. It must get its own viewport: the
+        // viewport owns the HiZ buffer, the depth bounding buffer and frameId, so sharing one with
+        // the main pass makes the shadow camera's occlusion data cull the player's view, which
+        // shows up as LOD chunks vanishing in the middle of the screen while moving/looking around.
+        if (IrisUtil.irisShadowActive()) {
+            return this.getOrCreate(IRIS_SHADOW_OBJECT);
+        }
+        // MC 1.21.1 NeoForge: Vivecraft VR viewport selection remains excluded
         return this.defaultViewport;
     }
 

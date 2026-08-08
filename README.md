@@ -47,7 +47,8 @@ You might wonder: "Why not just use the Fabric version with [Sinytra Connector](
 - Delayed chunk unloading to prevent pop-out effects
 
 ### Current Limitations
-- Requires Sodium 0.6.13+ (NeoForge version)
+- Requires Embeddium 1.0.x (NeoForge). This build integrates with Embeddium instead of Sodium,
+  so it can be used in packs that mandate Embeddium. Sodium is declared incompatible.
 - Some optional integrations not yet ported (Iris, Nvidium, Vivecraft)
 - Debug screen integration disabled (MC 1.21.1 API changes)
 
@@ -59,14 +60,16 @@ You might wonder: "Why not just use the Fabric version with [Sinytra Connector](
 |------------|---------|------|
 | Minecraft | 1.21.1 | - |
 | NeoForge | 21.1.x | [NeoForge](https://neoforged.net/) |
-| Sodium | mc1.21.1-0.6.13-neoforge | [Modrinth](https://modrinth.com/mod/sodium/version/mc1.21.1-0.6.13-neoforge) |
+| Embeddium | 1.0.15+mc1.21.1 (1.0.x) | [Modrinth](https://modrinth.com/mod/embeddium/version/1.0.15+mc1.21.1) |
 | Forgified Fabric API | 0.116.7+2.2.0+1.21.1 | [Modrinth](https://modrinth.com/mod/forgified-fabric-api/version/0.116.7+2.2.0+1.21.1) |
+
+Sodium must **not** be installed; Embeddium and Sodium are mutually exclusive.
+Voxy's settings appear as a "Voxy" page inside Embeddium's Video Settings screen.
 
 ### Recommended Dependencies
 
 | Dependency | Purpose | Link |
 |------------|---------|------|
-| Reese's Sodium Options | Better settings UI for Sodium + Voxy config access | [Modrinth](https://modrinth.com/mod/reeses-sodium-options) |
 | Lithium | General performance improvements | [Modrinth](https://modrinth.com/mod/lithium) |
 
 ## Installation

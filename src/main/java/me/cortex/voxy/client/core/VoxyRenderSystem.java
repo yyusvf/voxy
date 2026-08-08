@@ -36,9 +36,10 @@ import me.cortex.voxy.common.Logger;
 import me.cortex.voxy.common.thread.ServiceManager;
 import me.cortex.voxy.common.world.WorldEngine;
 import me.cortex.voxy.commonImpl.VoxyCommon;
-import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
+import org.embeddedt.embeddium.impl.render.chunk.ChunkRenderMatrices;
 // TODO: FogParameters removed in Sodium 0.6.x - fog rendering disabled for now
 // import net.caffeinemc.mods.sodium.client.util.FogParameters;
+import me.cortex.voxy.client.core.util.IrisUtil;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -170,6 +171,36 @@ public class VoxyRenderSystem {
     }
 
 
+    /**
+     * Hands blending back to Minecraft in a state its GlStateManager cache agrees with.
+     *
+     * A shader pack's voxy.json may declare per-draw-buffer blending (Photon does). That setup uses
+     * raw glEnable/glDisable(i) and glBlendFuncSeparate(i), all of which MC 1.21.1 caches. Two
+     * things then go wrong for everything vanilla draws afterwards - particles above all:
+     *   - glEnablei/glDisablei(GL_BLEND, n) overrides draw buffer n, and a later _enableBlend() is
+     *     skipped as a no-op when the cache already reads "enabled", so the override sticks.
+     *   - the blend func left behind is not the one the cache believes is set.
+     * Each state is therefore driven through a value change, which forces GlStateManager to issue
+     * a real GL call, leaving cache and driver in agreement.
+     *
+     * Upstream targets MC 1.21.11, which no longer keeps this cache, so it has no equivalent.
+     */
+    private static void restoreBlendState() {
+        //Guarantees a real glEnable then glDisable: the non-indexed calls reset every draw buffer,
+        //clearing any per-buffer override the shader pack's blend setup left behind.
+        GlStateManager._enableBlend();
+        GlStateManager._disableBlend();
+
+        //Second call always differs from the first, so it is never swallowed by the cache.
+        GlStateManager._blendFuncSeparate(GL_ZERO, GL_ONE, GL_ZERO, GL_ONE);
+        GlStateManager._blendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
+    }
+
+    /** See {@link AbstractRenderPipeline#setsUpViewportItself()}. */
+    public boolean pipelineSetsUpViewportItself() {
+        return this.pipeline != null && this.pipeline.setsUpViewportItself();
+    }
+
     // Sodium 0.6.x compatibility: FogParameters parameter removed
     public Viewport<?> setupViewport(ChunkRenderMatrices matrices, double cameraX, double cameraY, double cameraZ) {
         var viewport = this.getViewport();
@@ -198,8 +229,11 @@ public class VoxyRenderSystem {
         {//Apply render scaling factor
             var factor = this.pipeline.getRenderScalingFactor();
             if (factor != null) {
-                width = (int) (width*factor[0]);
-                height = (int) (height*factor[1]);
+                // Round, don't floor: flooring a fractional scaled size leaves voxy's terrain one
+                // pixel short of the shared depth buffer, which shows up as thin seam lines.
+                // Upstream MCRcortex/voxy#555.
+                width = Math.round(width*factor[0]);
+                height = Math.round(height*factor[1]);
             }
         }
 
@@ -222,6 +256,12 @@ public class VoxyRenderSystem {
 
     public void renderOpaque(Viewport<?> viewport) {
         if (viewport == null) {
+            return;
+        }
+
+        // A viewport that never went through setupViewport has no size; resizing the pipeline
+        // framebuffers to it fails with GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT.
+        if (viewport.width <= 0 || viewport.height <= 0) {
             return;
         }
 
@@ -249,7 +289,7 @@ public class VoxyRenderSystem {
         int[] dims = new int[4];
         glGetIntegerv(GL_VIEWPORT, dims);
 
-        glViewport(0,0, viewport.width, viewport.height);
+        GlStateManager._viewport(0,0, viewport.width, viewport.height);
 
         //var target = DefaultTerrainRenderPasses.CUTOUT.getTarget();
         //boundFB = ((net.minecraft.client.texture.GlTexture) target.getColorAttachment()).getOrCreateFramebuffer(((GlBackend) RenderSystem.getDevice()).getFramebufferManager(), target.getDepthAttachment());
@@ -262,8 +302,9 @@ public class VoxyRenderSystem {
         this.pipeline.preSetup(viewport);
 
         TimingStatistics.E.start();
-        // MC 1.21.1 NeoForge: Iris shader integration excluded - irisShadowActive() returns false (no Iris shadows)
-        if ((!VoxyClient.disableSodiumChunkRender())&&!false) {
+        // Never build the chunk bound depth buffer during Iris' shadow pass: it would be filled
+        // from the sun's camera and then used to cull the main view.
+        if ((!VoxyClient.disableSodiumChunkRender())&&!IrisUtil.irisShadowActive()) {
             this.chunkBoundRenderer.render(viewport);
         } else {
             viewport.depthBoundingBuffer.clear(0);
@@ -297,12 +338,16 @@ public class VoxyRenderSystem {
 
         GPUTiming.INSTANCE.tick();
 
-        glBindFramebuffer(GlConst.GL_FRAMEBUFFER, oldFB);
-        glViewport(dims[0], dims[1], dims[2], dims[3]);
+        // MC 1.21.1 port: restore through GlStateManager, not raw GL. 1.21.1 still caches this
+        // state, and Iris/vanilla draws afterwards trust that cache - resetting with raw LWJGL
+        // calls desyncs it and corrupts later passes in ways that depend on what ran before.
+        // Upstream targets 1.21.11, where MC no longer keeps this cache.
+        GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, oldFB);
+        GlStateManager._viewport(dims[0], dims[1], dims[2], dims[3]);
 
         {//Reset state manager stuffs
-            glUseProgram(0);
-            glEnable(GL_DEPTH_TEST);
+            GlStateManager._glUseProgram(0);
+            GlStateManager._enableDepthTest();
 
             GlStateManager._glBindVertexArray(0);//Clear binding
 
@@ -313,8 +358,9 @@ public class VoxyRenderSystem {
                 glBindSampler(i, 0);
             }
 
-            // MC 1.21.1 NeoForge: Iris shader integration excluded - clearIrisSamplers() is a no-op
-            // IrisUtil.clearIrisSamplers();//Thanks iris (sigh)
+            IrisUtil.clearIrisSamplers();//Thanks iris (sigh)
+
+            restoreBlendState();
 
             //TODO: should/needto actually restore all of these, not just clear them
             //Clear all the bindings
