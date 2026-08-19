@@ -20,6 +20,9 @@
     "client": [
       "me.cortex.voxy.client.VoxyClient"
     ],
+    "sodium:config_api_user": [
+      "me.cortex.voxy.client.config.VoxyConfigMenu"
+    ],
     "main": [
       "me.cortex.voxy.commonImpl.VoxyCommon"
     ]
@@ -35,7 +38,7 @@
     "minecraft": ">=1.21.1 <1.21.2",
     "fabricloader": ">=0.16.0",
     "fabric-api": ">=0.100.0",
-    "sodium": ">=0.6.0 <0.7.0"
+    "sodium": ">=0.8.0 <0.9.0"
   },
   "accessWidener": "voxy.accesswidener"
 }

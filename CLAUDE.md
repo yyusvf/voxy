@@ -95,7 +95,7 @@ Differences from that branch:
 
 | NeoForge branch | here |
 |---|---|
-| Embeddium 1.0.15 (`org.embeddedt.embeddium.impl.*`) | Sodium 0.6.13 (`net.caffeinemc.mods.sodium.client.*`) |
+| Embeddium 1.0.15 (`org.embeddedt.embeddium.impl.*`) | Sodium 0.8.12 (`net.caffeinemc.mods.sodium.client.*`) |
 | `EmbeddiumWorldRenderer` | `SodiumWorldRenderer` |
 | `RenderSection.setInfo` returns void | returns **boolean**, and updateSectionInfo branches on it |
 | `RenderSectionManager` field `world` | field `level` |
@@ -106,13 +106,26 @@ Differences from that branch:
 | accesstransformer.cfg | voxy.accesswidener |
 | FREX flawless frames unavailable | available (Fabric entrypoint mechanism) |
 
-Sodium version note: 0.6.13 is what this tree's API generation targets. Sodium 0.8.x also exists
-for MC 1.21.1, but has a different internal API (and is what upstream 0.2.9 targets) - moving to it
-would mean undoing the Sodium backport rather than a version bump.
+## Sodium 0.8, not 0.6
 
-**Sodium 0.6.13 has no config API** (`net.caffeinemc.mods.sodium.api.config`, added in 0.7), so
-`SodiumConfigBuilder`, `VoxyConfigMenu`, `IConfigPageSetter` and `MixinVideoSettingsScreen` stay
-excluded and there is currently no in-game settings GUI.
+Both 0.6.13 and 0.8.x exist for MC 1.21.1. This tree targets **0.8.12**, the generation upstream
+Voxy 0.2.9 is written against, so the Sodium side needs almost no backporting. Only two signatures
+differ from the 0.6.13 shape the NeoForge branch used:
+
+| | 0.6.13 | 0.8.12 |
+|---|---|---|
+| `RenderSectionManager` ctor | `(ClientLevel, int, CommandList)` | `(ClientLevel, int, **SortBehavior**, CommandList)` |
+| `DefaultChunkRenderer.render` | 5 params | 6 params (trailing `boolean indexedRenderingEnabled`) |
+| `ShaderParser.parseShader` | returns `String` | returns `ParsedShader` (use `.src()`) |
+
+Everything else is identical: field `level`, `setInfo` returning boolean, `initRenderer`,
+`renderSectionManager`, `chunkStatus`, `ChunkJobQueue`'s `new Semaphore`.
+
+0.8 also brings back Sodium's config API (`net.caffeinemc.mods.sodium.api.config`, absent in
+0.6.13), so the in-game settings page works through the `sodium:config_api_user` entrypoint -
+`SodiumConfigBuilder`, `VoxyConfigMenu`, `IConfigPageSetter` and `MixinVideoSettingsScreen` are
+compiled here. Those files had never been compiled by any branch before, and still carried Yarn
+names (`Identifier`); they are on Mojang names now.
 
 ## Build
 

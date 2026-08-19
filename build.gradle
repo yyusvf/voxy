@@ -25,13 +25,6 @@ sourceSets {
             // the -Pshaders build. Without those mixins IrisRenderingPipeline never implements
             // IGetIrisVoxyPipelineData, so RenderPipelineFactory falls back to the normal pipeline.
 
-            // Sodium's config API (net.caffeinemc.mods.sodium.api.config) only exists from
-            // Sodium 0.7 onwards. 0.6.13 still has the old SodiumOptionsGUI, so these stay out.
-            exclude 'me/cortex/voxy/client/config/SodiumConfigBuilder.java'
-            exclude 'me/cortex/voxy/client/config/VoxyConfigMenu.java'
-            exclude 'me/cortex/voxy/client/config/IConfigPageSetter.java'
-            exclude 'me/cortex/voxy/client/mixin/sodium/MixinVideoSettingsScreen.java'
-
             // ModMenu integration - no ModMenu dependency declared
             exclude 'me/cortex/voxy/client/config/ModMenuIntegration.java'
 

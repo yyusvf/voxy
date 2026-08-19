@@ -18,6 +18,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkBuilder;
 import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
 import net.caffeinemc.mods.sodium.client.render.chunk.map.ChunkTrackerHolder;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,11 +31,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Voxy's Sodium RenderSectionManager hooks.
  *
- * Verified against sodium-fabric-0.6.13+mc1.21.1:
+ * Verified against sodium-fabric-0.8.12+mc1.21.1:
  *  - the ClientLevel field is named {@code level}
  *  - {@code RenderSection.setInfo(BuiltSectionInfo)} returns boolean and updateSectionInfo
  *    branches on it, so the redirect below short-circuits on an unchanged info object
- *  - constructor is (ClientLevel, int, CommandList)
+ *  - constructor is (ClientLevel, int, SortBehavior, CommandList)
  */
 @Mixin(value = RenderSectionManager.class, remap = false)
 public class MixinRenderSectionManager {
@@ -46,7 +47,7 @@ public class MixinRenderSectionManager {
     @Shadow @Final private ChunkBuilder builder;
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void voxy$resetChunkTracker(ClientLevel level, int renderDistance, CommandList commandList, CallbackInfo ci) {
+    private void voxy$resetChunkTracker(ClientLevel level, int renderDistance, SortBehavior sortBehavior, CommandList commandList, CallbackInfo ci) {
         if (level.levelRenderer != null) {
             var system = ((IGetVoxyRenderSystem)(level.levelRenderer)).getVoxyRenderSystem();
             if (system != null) {
