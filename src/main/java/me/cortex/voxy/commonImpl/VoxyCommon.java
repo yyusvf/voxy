@@ -2,45 +2,42 @@ package me.cortex.voxy.commonImpl;
 
 import me.cortex.voxy.common.Logger;
 import me.cortex.voxy.common.config.Serialization;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.ModList;
-import net.neoforged.fml.loading.FMLLoader;
-import net.neoforged.fml.loading.LoadingModList;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 
 /**
- * Common initialization for Voxy on NeoForge.
+ * Common initialization for Voxy.
  *
- * IMPORTANT: This class may be loaded very early via mixin class loading,
- * before NeoForge's ModList is populated. We must use LoadingModList or
- * FMLLoader APIs that are available during early bootstrap.
+ * This class can be loaded very early through mixin class loading. FabricLoader is safe there -
+ * it is the loader itself - which is why this does not need the staged lookup the NeoForge branch
+ * uses (ModList is not populated that early, so it has to go through LoadingModList).
  */
-public class VoxyCommon {
+public class VoxyCommon implements ModInitializer {
     public static final String MOD_VERSION;
     public static final boolean IS_DEDICATED_SERVER;
     public static final boolean IS_IN_MINECRAFT;
 
     static {
-        // Use LoadingModList for early access - ModList.get() may be null during mixin loading
-        var modFile = LoadingModList.get() != null ? LoadingModList.get().getModFileById("voxy") : null;
-        if (modFile == null) {
+        ModContainer mod = FabricLoader.getInstance().getModContainer("voxy").orElse(null);
+        if (mod == null) {
             IS_IN_MINECRAFT = false;
             Logger.error("Running voxy without minecraft");
             MOD_VERSION = "<UNKNOWN>";
             IS_DEDICATED_SERVER = false;
         } else {
             IS_IN_MINECRAFT = true;
-            // Get version from LoadingModList (available early)
-            var version = modFile.getMods().stream()
-                    .filter(m -> m.getModId().equals("voxy"))
-                    .findFirst()
-                    .map(m -> m.getVersion().toString())
-                    .orElse("<UNKNOWN>");
-            String commit = "unknown";
+            var version = mod.getMetadata().getVersion().getFriendlyString();
+            var commit = mod.getMetadata().getCustomValue("commit").getAsString();
             MOD_VERSION = version + "-" + commit;
-            IS_DEDICATED_SERVER = FMLLoader.getDist() == Dist.DEDICATED_SERVER;
+            IS_DEDICATED_SERVER = FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
             Serialization.init();
         }
     }
+
+    @Override
+    public void onInitialize() {}
 
     //This is hardcoded like this because people do not understand what they are doing
     public static boolean isVerificationFlagOn(String name) {

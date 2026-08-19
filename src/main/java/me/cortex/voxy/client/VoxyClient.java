@@ -16,21 +16,21 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.HashSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * Client initialization for Voxy on NeoForge.
- * Uses NeoForge event bus for command registration.
+ * Client initialization for Voxy.
+ *
+ * initVoxyClient() is driven from MixinRenderSystem, because it needs a live GL context;
+ * onInitializeClient only wires up the things Fabric hands us at load time.
  */
-@EventBusSubscriber(modid = "voxy", value = Dist.CLIENT)
-public class VoxyClient {
+public class VoxyClient implements ClientModInitializer {
     private static final HashSet<String> FREX = new HashSet<>();
 
     public static void initVoxyClient() {
@@ -57,19 +57,26 @@ public class VoxyClient {
         }
     }
 
-    /**
-     * NeoForge event handler for client command registration.
-     * Replaces Fabric's ClientCommandRegistrationCallback.
-     */
-    @SubscribeEvent
-    public static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
-        if (VoxyCommon.isAvailable()) {
-            event.getDispatcher().register(VoxyCommands.register());
-        }
-    }
+    @Override
+    public void onInitializeClient() {
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            if (VoxyCommon.isAvailable()) {
+                dispatcher.register(VoxyCommands.register());
+            }
+        });
 
-    // Note: FREX flawless frames integration disabled on NeoForge
-    // (Fabric-specific entrypoint mechanism not available)
+        // FREX flawless frames: available again on Fabric (the NeoForge branch had to drop this,
+        // it relies on Fabric's custom entrypoint mechanism)
+        FabricLoader.getInstance()
+                .getEntrypoints("frex_flawless_frames", Consumer.class)
+                .forEach(api -> ((Consumer<Function<String, Consumer<Boolean>>>) api).accept(name -> active -> {
+                    if (active) {
+                        FREX.add(name);
+                    } else {
+                        FREX.remove(name);
+                    }
+                }));
+    }
 
     public static boolean isFrexActive() {
         return !FREX.isEmpty();

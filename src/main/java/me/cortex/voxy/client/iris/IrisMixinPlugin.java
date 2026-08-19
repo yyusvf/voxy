@@ -1,6 +1,6 @@
 package me.cortex.voxy.client.iris;
 
-import net.neoforged.fml.loading.LoadingModList;
+import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -11,20 +11,18 @@ import java.util.Set;
 /**
  * Disables every mixin in client.voxy.iris.mixins.json when Iris is not present.
  *
- * Presence MUST be probed through LoadingModList, never with Class.forName: this runs during
- * mixin config preparation, and merely loading net.irisshaders.iris.Iris here makes Mixin abort
- * every later config that targets it with
+ * Presence MUST be probed through the loader, never with Class.forName: this runs during mixin
+ * config preparation, and merely loading net.irisshaders.iris.Iris here makes Mixin abort every
+ * later config that targets it with
  *   MixinTargetAlreadyLoadedException: ... target net.irisshaders.iris.Iris was loaded too early
- * which is exactly what Monocle's mixins.monocle.compat.iris.json does. Do not reference any
- * Iris type from this class.
+ * Do not reference any Iris type from this class.
  */
 public class IrisMixinPlugin implements IMixinConfigPlugin {
     private boolean irisPresent;
 
     @Override
     public void onLoad(String mixinPackage) {
-        this.irisPresent = LoadingModList.get() != null
-                && LoadingModList.get().getModFileById("iris") != null;
+        this.irisPresent = FabricLoader.getInstance().isModLoaded("iris");
     }
 
     @Override

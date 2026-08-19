@@ -6,6 +6,7 @@ accessWidener v1 named
 #   - GlBuffer was removed; RenderSystem$AutoStorageIndexBuffer.name replaces it
 #   - SpriteContents.mipmapStrategy and TextureAtlas.maxMipLevel dropped: neither exists on
 #     1.21.1 and neither is referenced by this tree (upstream leftovers)
+#   - GameRenderer.getFov dropped: it returns double here (not float) and is unused
 
 accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
 accessible class com/mojang/blaze3d/platform/GlDebug$LogEntry
@@ -21,7 +22,6 @@ accessible field net/minecraft/world/level/chunk/PalettedContainer$Data palette 
 accessible field net/minecraft/world/level/chunk/PalettedContainer$Data storage Lnet/minecraft/util/BitStorage;
 
 
-accessible method net/minecraft/client/renderer/GameRenderer getFov (Lnet/minecraft/client/Camera;FZ)F
 
 accessible method net/minecraft/client/multiplayer/ClientChunkCache$Storage getChunk (I)Lnet/minecraft/world/level/chunk/LevelChunk;
 accessible method net/minecraft/client/multiplayer/ClientChunkCache$Storage getIndex (II)I

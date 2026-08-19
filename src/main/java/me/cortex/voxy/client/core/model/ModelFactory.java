@@ -738,8 +738,9 @@ public class ModelFactory {
     }
 
     private static BlockColor getColourProvider(Block block) {
-        // MC 1.21.1: blockColors is now Map<Block,BlockColor>, use .get(block) instead of .byId(id)
-        return Minecraft.getInstance().getBlockColors().blockColors.get(block);
+        // Vanilla keeps these in an IdMapper keyed by the block's registry id. (NeoForge patches
+        // this field into a Map<Block, BlockColor>, which is why that branch looks different.)
+        return Minecraft.getInstance().getBlockColors().blockColors.byId(BuiltInRegistries.BLOCK.getId(block));
     }
 
     //TODO: add a method to detect biome dependent colours (can do by detecting if getColor is ever called)

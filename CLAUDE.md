@@ -1,10 +1,10 @@
-# Voxy NeoForge 1.21.1 Port - Project Context
+# Voxy Fabric 1.21.1 Port - Project Context
 
 ## Project Overview
 
 This is a **NeoForge 1.21.1 port** of the Voxy mod (originally Fabric).
 
-**Target Platform**: NeoForge 21.1.x for Minecraft 1.21.1
+**Target Platform**: Fabric for Minecraft 1.21.1
 **Source**: Fabric Voxy mod
 **Goal**: Full compatibility with NeoForge modding ecosystem
 
@@ -84,35 +84,45 @@ Before modifying any file:
 4. **Test build** after every significant change
 5. **Document fixes** with evidence from reference sources
 
-## Embeddium instead of Sodium
+## Relationship to the NeoForge/Embeddium branch
 
-This port targets **Embeddium** (`org.embeddedt.embeddium.*`), not Sodium
-(`net.caffeinemc.mods.sodium.*`), so it can run in packs where Embeddium is mandatory.
-Embeddium 1.0.x is a fork of Sodium 0.6 with relocated packages; it does **not** ship any
-`net.caffeinemc.mods.sodium.*` classes, so mods compiled against Sodium fail silently there.
+This tree was converted from the NeoForge 1.21.1 + Embeddium port, not backported from upstream
+again: the expensive part is the MC 1.21.11 -> 1.21.1 backport (renderLevel signature, fog system,
+GlStateManager state cache, Sodium 0.8 -> 0.6 API), and that was already done and field-tested
+there. Only ~6% of files were loader-specific.
 
-Package mapping:
+Differences from that branch:
 
-| Sodium 0.6.13 | Embeddium 1.0.15 |
+| NeoForge branch | here |
 |---|---|
-| `net.caffeinemc.mods.sodium.client.*` | `org.embeddedt.embeddium.impl.*` |
-| `...client.render.SodiumWorldRenderer` | `...impl.render.EmbeddiumWorldRenderer` |
-| `...client.util.color.ColorSRGB` | `...impl.util.color.ColorSRGB` |
-| `...client.gui.options.*` (0.5-era API) | `org.embeddedt.embeddium.api.options.*` |
-| `...api.config.*` (0.6 config API) | no equivalent - use `OptionGUIConstructionEvent` |
+| Embeddium 1.0.15 (`org.embeddedt.embeddium.impl.*`) | Sodium 0.6.13 (`net.caffeinemc.mods.sodium.client.*`) |
+| `EmbeddiumWorldRenderer` | `SodiumWorldRenderer` |
+| `RenderSection.setInfo` returns void | returns **boolean**, and updateSectionInfo branches on it |
+| `RenderSectionManager` field `world` | field `level` |
+| `ModList` / `LoadingModList` / `FMLPaths` | `FabricLoader` |
+| `@Mod` class + NeoForge config screen | `ClientModInitializer` / `ModInitializer` entrypoints |
+| `ViewportEvent.RenderFog` (VoxyClientEvents) | `MixinFogRenderer` writing RenderSystem shader fog |
+| `RegisterClientCommandsEvent`, `CommandSourceStack` | `ClientCommandRegistrationCallback`, `FabricClientCommandSource` |
+| accesstransformer.cfg | voxy.accesswidener |
+| FREX flawless frames unavailable | available (Fabric entrypoint mechanism) |
 
-Behavioural differences that required code changes (verified with `javap` against the
-Embeddium jar - always re-verify when bumping the Embeddium version):
+Sodium version note: 0.6.13 is what this tree's API generation targets. Sodium 0.8.x also exists
+for MC 1.21.1, but has a different internal API (and is what upstream 0.2.9 targets) - moving to it
+would mean undoing the Sodium backport rather than a version bump.
 
-- `RenderSectionManager`'s `ClientLevel` field is named `world`, not `level`
-- `RenderSection.setInfo(BuiltSectionInfo)` returns `void`, not `boolean`
-- `RenderRegionManager` has no `uploadResults()` and no chunk fade-in timer
-  (`MixinRenderRegionManager` is therefore excluded from compilation)
-- Embeddium requires an explicit `OptionIdentifier` on every option and option group
+**Sodium 0.6.13 has no config API** (`net.caffeinemc.mods.sodium.api.config`, added in 0.7), so
+`SodiumConfigBuilder`, `VoxyConfigMenu`, `IConfigPageSetter` and `MixinVideoSettingsScreen` stay
+excluded and there is currently no in-game settings GUI.
 
-Verification workflow used for this port: extract the Embeddium jar and run
-`javap -p` / `javap -c` on each mixin target to confirm class names, field names, method
-signatures and injection points before editing.
+## Build
+
+- `./gradlew build` - normal jar
+- `./gradlew build -Pshaders` - separate `voxy-shaders-*.jar` with the Iris integration registered
+
+Loom validates the access widener strictly. That caught three dead entries the NeoForge
+accesstransformer carried unnoticed (its validation is switched off): `SpriteContents.mipmapStrategy`
+and `TextureAtlas.maxMipLevel` do not exist on 1.21.1, and `GameRenderer.getFov` returns double
+here, not float. All three were unused.
 
 ## Known Issues (NeoForge Port)
 
