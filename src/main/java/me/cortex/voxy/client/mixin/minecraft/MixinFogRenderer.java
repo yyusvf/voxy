@@ -1,26 +1,37 @@
 package me.cortex.voxy.client.mixin.minecraft;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import me.cortex.voxy.client.config.VoxyConfig;
+import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.FogRenderer;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * MC 1.21.1 compatible fog mixin.
+ * Pushes terrain fog to infinity so Voxy's LODs are not cut off by a fog wall at the vanilla
+ * render distance. Same approach Distant Horizons uses.
  *
- * This is a placeholder mixin that documents fog handling for NeoForge port.
- * The actual fog manipulation (save-restore pattern) is done in VoxyRenderSystem.renderOpaque()
- * to ensure vanilla terrain renders with normal fog, while Voxy LODs render with fog pushed to infinity.
- *
- * Render order:
- * 1. setupFog(FOG_TERRAIN) called - fog set to vanilla render distance
- * 2. Vanilla terrain renders - with normal fog
- * 3. Voxy renderOpaque() called:
- *    a. Save current fog values
- *    b. Push fog to infinity (999999.0f)
- *    c. Render LODs without fog wall
- *    d. Restore original fog values
- * 4. Clouds/other elements render - with correct fog
+ * Fabric port: the NeoForge branch does this from VoxyClientEvents via ViewportEvent.RenderFog,
+ * which has no Fabric counterpart, so the values are written straight after setupFog computed
+ * them. MC 1.21.1 keeps fog in RenderSystem's shader fog state (1.21.6+ replaced this with a
+ * FogParameters UBO, which is why upstream looks different here).
  */
 @Mixin(FogRenderer.class)
 public class MixinFogRenderer {
-    // No injections needed - VoxyRenderSystem handles fog save-restore directly
+    @Inject(method = "setupFog", at = @At("TAIL"))
+    private static void voxy$pushTerrainFogToInfinity(Camera camera, FogRenderer.FogMode fogMode,
+                                                      float farPlaneDistance, boolean shouldCreateFog,
+                                                      float partialTick, CallbackInfo ci) {
+        if (fogMode != FogRenderer.FogMode.FOG_TERRAIN) {
+            return;
+        }
+        if (!VoxyConfig.CONFIG.enabled || !VoxyConfig.CONFIG.enableRendering) {
+            return;
+        }
+        // Large, but not Float.MAX_VALUE - that breaks shader fog math
+        RenderSystem.setShaderFogStart(999999.0f);
+        RenderSystem.setShaderFogEnd(9999999.0f);
+    }
 }

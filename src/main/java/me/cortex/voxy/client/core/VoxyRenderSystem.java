@@ -36,7 +36,7 @@ import me.cortex.voxy.common.Logger;
 import me.cortex.voxy.common.thread.ServiceManager;
 import me.cortex.voxy.common.world.WorldEngine;
 import me.cortex.voxy.commonImpl.VoxyCommon;
-import org.embeddedt.embeddium.impl.render.chunk.ChunkRenderMatrices;
+import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 // TODO: FogParameters removed in Sodium 0.6.x - fog rendering disabled for now
 // import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import me.cortex.voxy.client.core.util.IrisUtil;

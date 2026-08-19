@@ -16,7 +16,7 @@ import me.cortex.voxy.common.config.storage.rocksdb.RocksDBStorageBackend;
 import me.cortex.voxy.commonImpl.ImportManager;
 import me.cortex.voxy.commonImpl.VoxyInstance;
 import me.cortex.voxy.commonImpl.WorldIdentifier;
-import org.embeddedt.embeddium.impl.render.EmbeddiumWorldRenderer;
+import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.storage.LevelResource;
 import java.nio.file.Files;
@@ -44,7 +44,7 @@ public class VoxyClientInstance extends VoxyInstance {
     public void updateDedicatedThreads() {
         int target = VoxyConfig.CONFIG.serviceThreads;
         if (!VoxyConfig.CONFIG.dontUseSodiumBuilderThreads) {
-            var swr = EmbeddiumWorldRenderer.instanceNullable();
+            var swr = SodiumWorldRenderer.instanceNullable();
             if (swr != null) {
                 var rsm = ((AccessorSodiumWorldRenderer) swr).getRenderSectionManager();
                 if (rsm != null) {

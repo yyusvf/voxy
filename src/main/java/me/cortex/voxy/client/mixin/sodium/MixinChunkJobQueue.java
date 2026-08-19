@@ -17,7 +17,7 @@ import java.util.concurrent.Semaphore;
  * Embeddium port: ChunkJobQueue is package-private, so it is targeted by name.
  * Its constructor still does {@code new Semaphore(0)}, so the NEW redirect below still applies.
  */
-@Mixin(targets={"org.embeddedt.embeddium.impl.render.chunk.compile.executor.ChunkJobQueue"},remap = false)
+@Mixin(targets={"net.caffeinemc.mods.sodium.client.render.chunk.compile.executor.ChunkJobQueue"},remap = false)
 public class MixinChunkJobQueue {
     @Unique private MultiThreadPrioritySemaphore.Block voxy$semaphoreBlock;
 

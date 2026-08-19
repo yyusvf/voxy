@@ -5,7 +5,7 @@ package me.cortex.voxy.client.core.rendering;
 // import org.vivecraft.api.client.VRRenderingAPI;
 // import static org.vivecraft.api.client.data.RenderPass.VANILLA;
 import me.cortex.voxy.client.core.util.IrisUtil;
-import net.neoforged.fml.ModList;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 
 public class ViewportSelector <T extends Viewport<?>> {
     // MC 1.21.1 NeoForge: Vivecraft not available - always false
-    public static final boolean VIVECRAFT_INSTALLED = ModList.get() != null && ModList.get().isLoaded("vivecraft");
+    public static final boolean VIVECRAFT_INSTALLED = FabricLoader.getInstance().isModLoaded("vivecraft");
 
     private final Supplier<T> creator;
     private final T defaultViewport;
