@@ -12,14 +12,61 @@ It is based on [j-shelfwood/voxy-neoforge](https://github.com/j-shelfwood/voxy-n
 
 ## Build
 
-Building needs JDK 21, set via `JAVA_HOME` or `org.gradle.java.home` in `~/.gradle/gradle.properties`.
+You need Git and JDK 21. The first build downloads Minecraft and all dependencies, so it takes a few minutes. Later builds are much faster.
 
-```
-./gradlew build             # voxy-<ver>.jar
-./gradlew build -Pshaders   # voxy-shaders-<ver>.jar, Iris integration registered
+### 1. Install JDK 21
+
+Windows (PowerShell):
+```powershell
+winget install EclipseAdoptium.Temurin.21.JDK
 ```
 
-Both jars share the mod id, so install only one. The Iris pipeline only engages for packs that ship a `voxy.json`.
+macOS:
+```bash
+brew install --cask temurin@21
+```
+
+Linux (Debian/Ubuntu):
+```bash
+sudo apt install openjdk-21-jdk
+```
+
+### 2. Get the source
+
+```bash
+git clone --depth 1 -b mc1.21.1-embeddium https://github.com/yyusvf/voxy.git
+cd voxy
+```
+
+Without Git, click *Code* on this branch, then *Download ZIP*, unpack it and open a terminal in the extracted folder.
+On Windows, keep the folder path short (for example `C:\dev\voxy`), because some source paths are deep enough to hit the Windows path length limit.
+
+### 3. Build
+
+Windows (PowerShell). The first line points the build at JDK 21, even if an older Java comes first on your `PATH`:
+```powershell
+$env:JAVA_HOME = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory -Filter "jdk-21*" | Select-Object -First 1).FullName
+.\gradlew.bat build
+```
+
+macOS and Linux (`chmod` is only needed after a ZIP download and is harmless otherwise):
+```bash
+chmod +x gradlew
+./gradlew build
+```
+
+For the shader variant, add `-Pshaders`, for example `.\gradlew.bat build -Pshaders` or `./gradlew build -Pshaders`.
+
+### 4. Install
+
+The jar ends up in `build/libs/`. A plain `build` produces `voxy-0.2.9-alpha.jar`, and `build -Pshaders` produces `voxy-shaders-0.2.9-alpha.jar`.
+Copy one of them into your instance's `mods` folder and remove any other Voxy jar, because both use the same mod id.
+The shader variant only changes anything with packs that ship a `voxy.json`, such as Photon's voxy-support build.
+
+### Troubleshooting
+
+- **"Gradle requires JVM 17 or later"** or **"Unsupported class file major version"** means the build is running on an older Java. On Windows, run the `$env:JAVA_HOME` line again in the same window. On macOS, run `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`. On Linux, run `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`.
+- **"Filename too long"** on Windows means the folder path is too deep. Move it somewhere shorter, or run `git config --global core.longpaths true` and clone again.
 
 ## mc1.21.1-embeddium
 
