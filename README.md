@@ -1,106 +1,80 @@
-# Voxy NeoForge 1.21.1
+# Voxy for Minecraft 1.21.1 — NeoForge (Embeddium) & Fabric
 
-> **Unofficial NeoForge port** of the Voxy mod
+> **Unofficial, community-maintained fork** of [MCRcortex/voxy](https://github.com/MCRcortex/voxy).
+> Not affiliated with or endorsed by MCRcortex. Please do **not** report issues from this fork upstream.
 
-## Special Thanks
+Voxy is a level-of-detail (LOD) renderer that draws terrain far beyond the vanilla render distance.
+Upstream Voxy jumps from Minecraft 1.20.4 straight to 1.21.6 and never supported 1.21.1 — this fork
+is a backport for 1.21.1, on both loaders, including shader-pack support.
 
-**All credit for Voxy goes to [MCRcortex](https://github.com/MCRcortex)**, the original author and creator of this incredible LOD rendering mod.
+## No binaries
 
-- **Original Repository:** [MCRcortex/voxy](https://github.com/MCRcortex/voxy)
-- **Original Author:** [MCRcortex](https://github.com/MCRcortex)
+Voxy is **All Rights Reserved** by MCRcortex (see [LICENSE.md](LICENSE.md): *"Do not redistribute."*).
+This repository therefore publishes **source only** — no releases, no CI artifacts. Build it yourself
+(see below). Rights-holder concerns: please open an issue.
 
-This repository is a community port to NeoForge 1.21.1, created because the original author has indicated they will not be backporting to this version. We are deeply grateful for MCRcortex's work on Voxy.
+## Credits
 
-## License Notice
+| | |
+|---|---|
+| **[MCRcortex](https://github.com/MCRcortex)** | Author of Voxy. All credit for the mod itself goes here. |
+| **[Joris Schelfhout](https://github.com/j-shelfwood)** | The NeoForge 1.21.1 port this fork builds on — [j-shelfwood/voxy-neoforge](https://github.com/j-shelfwood/voxy-neoforge). His commits are preserved in this history. |
+| **this fork** | Embeddium retarget, Iris shader backport for 1.21.1, the Fabric port, and the fixes listed below. |
 
-The original Voxy mod is licensed under **All Rights Reserved** by MCRcortex. This port is provided for personal use. Please respect the original author's licensing terms.
+## Branches
 
----
+| Branch | Loader | Terrain renderer | Shaders (optional) |
+|---|---|---|---|
+| [`mc1.21.1-embeddium`](../../tree/mc1.21.1-embeddium) | NeoForge 21.1 | **Embeddium** 1.0.x | Iris 1.8.12 via Monocle |
+| [`mc1.21.1-fabric`](../../tree/mc1.21.1-fabric) | Fabric Loader 0.16+ | **Sodium** 0.8.x | Iris 1.8.x |
 
-## About
+## Building
 
-**Voxy** is a Level-of-Detail (LOD) rendering mod for Minecraft that extends your view distance far beyond vanilla limits by rendering distant terrain at lower detail levels.
+Requires a **JDK 21**. Point Gradle at it with `JAVA_HOME`, or — if another Java is first on your
+`PATH` — add `org.gradle.java.home=/path/to/jdk-21` to `~/.gradle/gradle.properties` (keep machine
+paths out of the repository's own `gradle.properties`).
 
-## Why This Port?
-
-You might wonder: "Why not just use the Fabric version with [Sinytra Connector](https://github.com/Sinytra/Connector)?"
-
-| Aspect | Native NeoForge Port (this repo) | Sinytra Connector |
-|--------|----------------------------------|-------------------|
-| **Performance** | No translation overhead | Runtime translation layer |
-| **Mod Integration** | Native NeoForge API calls | Fabric API emulation via FFAPI |
-| **Maintenance** | Must track upstream Voxy changes | Just drop in Fabric jar |
-| **Stability** | Tested against NeoForge directly | May have edge cases from translation |
-| **Dependencies** | Forgified Fabric API | Connector + Forgified Fabric API |
-
-**Bottom line:** For a performance-critical LOD mod like Voxy, eliminating the translation layer overhead is worthwhile. If you prioritize simplicity and don't mind potential overhead, Sinytra Connector is a valid alternative.
-
-## Status
-
-**Alpha** - Functional with known limitations.
-
-### Working Features
-- LOD terrain rendering beyond vanilla render distance
-- Smooth transitions between LOD and vanilla chunks
-- Fog integration (disabled at LOD boundaries)
-- Block model baking for all render types (solid, cutout, cutout_mipped, translucent)
-- Delayed chunk unloading to prevent pop-out effects
-
-### Current Limitations
-- Requires Embeddium 1.0.x (NeoForge). This build integrates with Embeddium instead of Sodium,
-  so it can be used in packs that mandate Embeddium. Sodium is declared incompatible.
-- Some optional integrations not yet ported (Iris, Nvidium, Vivecraft)
-- Debug screen integration disabled (MC 1.21.1 API changes)
-
-## Requirements
-
-### Required Dependencies
-
-| Dependency | Version | Link |
-|------------|---------|------|
-| Minecraft | 1.21.1 | - |
-| NeoForge | 21.1.x | [NeoForge](https://neoforged.net/) |
-| Embeddium | 1.0.15+mc1.21.1 (1.0.x) | [Modrinth](https://modrinth.com/mod/embeddium/version/1.0.15+mc1.21.1) |
-| Forgified Fabric API | 0.116.7+2.2.0+1.21.1 | [Modrinth](https://modrinth.com/mod/forgified-fabric-api/version/0.116.7+2.2.0+1.21.1) |
-
-Sodium must **not** be installed; Embeddium and Sodium are mutually exclusive.
-Voxy's settings appear as a "Voxy" page inside Embeddium's Video Settings screen.
-
-### Recommended Dependencies
-
-| Dependency | Purpose | Link |
-|------------|---------|------|
-| Lithium | General performance improvements | [Modrinth](https://modrinth.com/mod/lithium) |
-
-## Installation
-
-> **Note:** Due to Voxy's ARR (All Rights Reserved) license, compiled JARs are not distributed. You must build from source.
-
-1. Install NeoForge for Minecraft 1.21.1
-2. Install required dependencies (see above)
-3. Build Voxy from source (see below)
-4. Place the built JAR in your `mods` folder
-
-## Building from Source
-
-```bash
-git clone https://github.com/j-shelfwood/voxy-neoforge.git
-cd voxy-neoforge
-./gradlew build
+```
+./gradlew build             # build/libs/voxy-<version>.jar
+./gradlew build -Pshaders   # build/libs/voxy-shaders-<version>.jar  (Iris integration enabled)
 ```
 
-The built JAR will be in `build/libs/`.
+Both jars use the mod id `voxy` — put **only one** of them in your mods folder.
+The shader integration only activates with packs that ship Voxy support (`voxy.json`, e.g. Photon's
+voxy-support build). With any other pack Voxy falls back to its normal pipeline.
 
-## Contributing
+## This branch: NeoForge + Embeddium
 
-For development guidelines, see [CLAUDE.md](CLAUDE.md).
+**Requires:** NeoForge 21.1.x · Embeddium 1.0.x · Forgified Fabric API.
+**Incompatible with Sodium** — Embeddium and Sodium are mutually exclusive; this build integrates with
+Embeddium's relocated packages (`org.embeddedt.embeddium.impl.*`) so it runs in packs that mandate it.
+Settings: Embeddium *Video Settings → Voxy*, or the NeoForge mod config screen.
 
-### Validation Scripts
+**Status:** runs in FTB OceanBlock 2 (Embeddium 1.0.15, Iris 1.8.12 + Monocle). Shaders tested with
+Complementary (normal pipeline) and Photon voxy-support (integrated pipeline).
 
-The `scripts/` directory contains build validation tools used in CI.
+### Changes on top of Joris' port
+- Retargeted the terrain integration from Sodium 0.6.13 to Embeddium 1.0.15 (verified with `javap`
+  against the Embeddium jar; field `world` vs `level`, `RenderSection.setInfo` returning `void`).
+- Embeddium options page via `OptionGUIConstructionEvent` — no SodiumOptionsAPI bridge needed.
+- Iris shader integration backported from MC 1.21.11 / Iris 1.10 to MC 1.21.1 / Iris 1.8.12
+  (`renderLevel` signature, `RenderSystem.activeTexture` injection point, sampler API).
+- Fixed with shaders active: viewport set up twice per frame (seam outlines, flicker); Iris' shadow
+  pass sharing the main viewport and running the chunk-bound renderer (LODs vanishing mid-screen);
+  crash on the never-initialised shadow viewport.
+- Restore GL state through `GlStateManager`, including blending — MC 1.21.1 caches that state, and raw
+  GL resets desynced it (darkened water, wrong particle transparency with Photon).
+- `renderScale` rounding (upstream [#555](https://github.com/MCRcortex/voxy/issues/555)).
+- *Enable Voxy* toggle now applies immediately and persists; mod logo crash in Embeddium's settings.
 
-## Links
+### Known limitations
+- LODs do not cast shadows in shader packs (there is no shadow-pass viewport setup).
+- Photon particle-transparency fix shipped but not yet confirmed in-game.
 
-- **Original Voxy:** [github.com/MCRcortex/voxy](https://github.com/MCRcortex/voxy)
-- **This Port:** [github.com/j-shelfwood/voxy-neoforge](https://github.com/j-shelfwood/voxy-neoforge)
-- **Sinytra Connector (alternative):** [github.com/Sinytra/Connector](https://github.com/Sinytra/Connector)
+## Development notes
+
+[CLAUDE.md](CLAUDE.md) documents the API mappings and the verification workflow: every mixin target is
+checked with `javap` against the actual dependency jar before editing. The build also runs a
+*port stub inventory* (`scripts/validate_port_stubs.py`) that flags newly introduced `if (false)` /
+`&& !false` branches — several bugs here came from upstream code paths silently stubbed out while
+porting.
