@@ -1,9 +1,9 @@
-# voxy — 1.21.1 backport
+# voxy 1.21.1 backport
 
 Unofficial backport of [MCRcortex/voxy](https://github.com/MCRcortex/voxy) to Minecraft 1.21.1.
-Based on [j-shelfwood/voxy-neoforge](https://github.com/j-shelfwood/voxy-neoforge). Not affiliated with upstream — don't report issues there.
+It is based on [j-shelfwood/voxy-neoforge](https://github.com/j-shelfwood/voxy-neoforge). This fork is not affiliated with upstream, so please don't report issues there.
 
-**Source only.** Voxy is All Rights Reserved ([LICENSE.md](LICENSE.md)); no releases or CI artifacts are published.
+**Source only.** Voxy is All Rights Reserved ([LICENSE.md](LICENSE.md)), so no releases or CI artifacts are published.
 
 | Branch | Loader | Renderer | Shaders |
 |---|---|---|---|
@@ -12,28 +12,27 @@ Based on [j-shelfwood/voxy-neoforge](https://github.com/j-shelfwood/voxy-neoforg
 
 ## Build
 
-JDK 21 (`JAVA_HOME`, or `org.gradle.java.home` in `~/.gradle/gradle.properties`).
+Building needs JDK 21, set via `JAVA_HOME` or `org.gradle.java.home` in `~/.gradle/gradle.properties`.
 
 ```
 ./gradlew build             # voxy-<ver>.jar
 ./gradlew build -Pshaders   # voxy-shaders-<ver>.jar, Iris integration registered
 ```
 
-Same mod id — install one. The Iris pipeline only engages for packs shipping `voxy.json`.
+Both jars share the mod id, so install only one. The Iris pipeline only engages for packs that ship a `voxy.json`.
 
 ## mc1.21.1-embeddium
 
-Requires NeoForge 21.1, Embeddium 1.0.x, Forgified Fabric API. Sodium is declared incompatible.
-Tested in-game (FTB OceanBlock 2; Complementary, Photon voxy-support).
+Requires NeoForge 21.1, Embeddium 1.0.x and Forgified Fabric API. Sodium is declared incompatible.
+Tested in-game in FTB OceanBlock 2 with Complementary and Photon voxy-support.
 
 Changes over j-shelfwood:
-- Sodium → Embeddium (`org.embeddedt.embeddium.impl.*`); options page via `OptionGUIConstructionEvent`
-- Iris integration backported to MC 1.21.1 / Iris 1.8.12
-- Shader-path fixes: double viewport setup per frame, shadow pass sharing the main viewport and
-  writing the chunk-bound buffer, uninitialised shadow viewport crash
-- GL state (incl. blend) restored through `GlStateManager` — 1.21.1 caches it
-- `renderScale` rounding ([#555](https://github.com/MCRcortex/voxy/issues/555)), enable toggle applies/persists, logo path crash
+- The terrain integration targets Embeddium (`org.embeddedt.embeddium.impl.*`) instead of Sodium, and the options page uses `OptionGUIConstructionEvent`.
+- The Iris integration is backported to MC 1.21.1 and Iris 1.8.12.
+- With shaders, the viewport is no longer set up twice per frame, the shadow pass gets its own viewport and no longer writes the chunk-bound buffer, and the uninitialised shadow viewport no longer crashes.
+- GL state, including blending, is restored through `GlStateManager`, because 1.21.1 caches it.
+- `renderScale` is rounded ([#555](https://github.com/MCRcortex/voxy/issues/555)), the enable toggle applies and persists, and the logo path no longer crashes Embeddium's settings.
 
-Known: LODs cast no shadows; Photon particle transparency fix unconfirmed.
+Known issues: LODs cast no shadows, and the Photon particle transparency fix is unconfirmed.
 
-Mappings and verification notes: [CLAUDE.md](CLAUDE.md).
+Mappings and verification notes are in [CLAUDE.md](CLAUDE.md).
