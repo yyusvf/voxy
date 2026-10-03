@@ -1,9 +1,9 @@
-# voxy — 1.21.1 backport
+# voxy 1.21.1 backport
 
 Unofficial backport of [MCRcortex/voxy](https://github.com/MCRcortex/voxy) to Minecraft 1.21.1.
-Based on [j-shelfwood/voxy-neoforge](https://github.com/j-shelfwood/voxy-neoforge). Not affiliated with upstream — don't report issues there.
+It is based on [j-shelfwood/voxy-neoforge](https://github.com/j-shelfwood/voxy-neoforge). This fork is not affiliated with upstream, so please don't report issues there.
 
-**Source only.** Voxy is All Rights Reserved ([LICENSE.md](LICENSE.md)); no releases or CI artifacts are published.
+**Source only.** Voxy is All Rights Reserved ([LICENSE.md](LICENSE.md)), so no releases or CI artifacts are published.
 
 | Branch | Loader | Renderer | Shaders |
 |---|---|---|---|
@@ -12,24 +12,24 @@ Based on [j-shelfwood/voxy-neoforge](https://github.com/j-shelfwood/voxy-neoforg
 
 ## Build
 
-JDK 21 (`JAVA_HOME`, or `org.gradle.java.home` in `~/.gradle/gradle.properties`).
+Building needs JDK 21, set via `JAVA_HOME` or `org.gradle.java.home` in `~/.gradle/gradle.properties`.
 
 ```
 ./gradlew build             # voxy-<ver>.jar
 ./gradlew build -Pshaders   # voxy-shaders-<ver>.jar, Iris integration registered
 ```
 
-Same mod id — install one. The Iris pipeline only engages for packs shipping `voxy.json`.
+Both jars share the mod id, so install only one. The Iris pipeline only engages for packs that ship a `voxy.json`.
 
 ## mc1.21.1-fabric
 
-Requires Fabric Loader 0.16+, Fabric API, Sodium 0.8.x. Converted from the NeoForge branch; builds, **not tested in-game**.
+Requires Fabric Loader 0.16+, Fabric API and Sodium 0.8.x. It was converted from the NeoForge branch and builds, but has **not been tested in-game**.
 
-- Loom on Mojang mappings
-- Sodium 0.8.12 deltas: `SortBehavior` ctor param, extra `boolean` on `DefaultChunkRenderer.render`, `ParsedShader.src()`
-- Sodium config API settings page; FREX flawless frames
-- Access widener validated (3 dead entries removed)
+- The build uses Loom on Mojang mappings.
+- Sodium 0.8.12 adds a `SortBehavior` constructor parameter and a trailing `boolean` on `DefaultChunkRenderer.render`, and `parseShader` now returns a `ParsedShader`.
+- Settings live on Sodium's config API page, and FREX flawless frames works.
+- Loom validates the access widener, which removed 3 dead entries.
 
-Known: LODs cast no shadows.
+Known issue: LODs cast no shadows.
 
-Mappings and verification notes: [CLAUDE.md](CLAUDE.md).
+Mappings and verification notes are in [CLAUDE.md](CLAUDE.md).
